@@ -1,0 +1,32 @@
+save in desktop
+cd..
+npm create cloudflare@latest --jhm5-ex03
+y, hellowrld, worker, type, y, n
+
+cd folder
+npx wrangler deploy
+allow 
+login 
+go link
+will show hello xxx in web
+
+edit 
+create 'public' filder
+pull 3 folder 
+return env.assets.fetch(request)
+enable line 37, add , in index.ts
+ 
+ wc
+ASSETS: Fetcher;
+
+wrangler
+
+
+npx wrangler deploy
+
+
+save 
+open git log
+set user name and user gmail
+
+
