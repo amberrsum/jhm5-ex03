@@ -194,7 +194,7 @@
 <body>
     <div class="container">
         <h1>TIC-TAC-TOE</h1>
-        <p class="subtitle">Play against the computer or challenge a friend!</p>
+        <p class="subtitle">Play against the computer or challenge a friend!!!</p>
         
         <div class="game-info">
             <div class="player-info">
@@ -265,52 +265,52 @@
                 [0, 4, 8], [2, 4, 6]             // diagonals
             ];
             
-            // Messages
+            //messages
             const winMessage = () => `Player ${currentPlayer} Wins!`;
             const drawMessage = () => `Game Ended in a Draw!`;
             const currentPlayerTurn = () => `Player ${currentPlayer}'s Turn`;
             
-            // Initialize game
+            // initialize game
             function initGame() {
                 gameActive = true;
                 currentPlayer = 'X';
                 gameState = ['', '', '', '', '', '', '', '', ''];
                 status.textContent = currentPlayerTurn();
                 
-                // Clear board
+                //clear board
                 cells.forEach(cell => {
                     cell.textContent = '';
                     cell.classList.remove('x', 'o', 'winning-cell');
                 });
             }
             
-            // Handle cell click
+            // handle cell click
             function handleCellClick(clickedCellEvent) {
                 const clickedCell = clickedCellEvent.target;
                 const clickedCellIndex = parseInt(clickedCell.getAttribute('data-index'));
                 
-                // Check if cell is already played or game is inactive
+                // Check cell is already played or game is inactive
                 if (gameState[clickedCellIndex] !== '' || !gameActive) {
                     return;
                 }
                 
-                // Process the move
+                // process move
                 processMove(clickedCellIndex, clickedCell);
                 
-                // For 1-player mode, let computer make a move if game is still active
+                //for 1-player mode, let computer make a move if game is still active
                 if (gameMode === 'onePlayer' && gameActive && currentPlayer === 'O') {
                     setTimeout(makeComputerMove, 500);
                 }
             }
             
-            // Process a move
+            //process a move
             function processMove(cellIndex, cellElement) {
                 // Update game state and UI
                 gameState[cellIndex] = currentPlayer;
                 cellElement.textContent = currentPlayer;
                 cellElement.classList.add(currentPlayer === 'X' ? 'x' : 'o');
                 
-                // Check for win or draw
+                //check for win or draw
                 if (checkWin()) {
                     status.textContent = winMessage();
                     gameActive = false;
@@ -322,12 +322,12 @@
                     return;
                 }
                 
-                // Switch player
+                //switch player
                 currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
                 status.textContent = currentPlayerTurn();
             }
             
-            // Check for win
+            // check win
             function checkWin() {
                 for (let i = 0; i < winningConditions.length; i++) {
                     const [a, b, c] = winningConditions[i];
@@ -340,7 +340,7 @@
                 return false;
             }
             
-            // Highlight winning cells
+            // highlight winning cells
             function highlightWinningCells() {
                 for (let i = 0; i < winningConditions.length; i++) {
                     const [a, b, c] = winningConditions[i];
@@ -355,16 +355,16 @@
                 }
             }
             
-            // Check for draw
+            // check for draw
             function checkDraw() {
                 return !gameState.includes('');
             }
             
-            // Computer move logic
+            // computer move 
             function makeComputerMove() {
                 if (!gameActive) return;
                 
-                // Try to win if possible
+                // try to win if possible
                 for (let i = 0; i < gameState.length; i++) {
                     if (gameState[i] === '') {
                         gameState[i] = 'O';
@@ -376,7 +376,7 @@
                     }
                 }
                 
-                // Block player from winning
+                // block player from winning
                 for (let i = 0; i < gameState.length; i++) {
                     if (gameState[i] === '') {
                         gameState[i] = 'X';
@@ -389,13 +389,13 @@
                     }
                 }
                 
-                // Try to take center
+                // take center
                 if (gameState[4] === '') {
                     processMove(4, cells[4]);
                     return;
                 }
                 
-                // Try to take a corner
+                // take a corner
                 const corners = [0, 2, 6, 8];
                 const availableCorners = corners.filter(index => gameState[index] === '');
                 if (availableCorners.length > 0) {
@@ -404,7 +404,7 @@
                     return;
                 }
                 
-                // Take any available edge
+                // take any available edge
                 const edges = [1, 3, 5, 7];
                 const availableEdges = edges.filter(index => gameState[index] === '');
                 if (availableEdges.length > 0) {
@@ -414,7 +414,7 @@
                 }
             }
             
-            // Switch to 1-player mode
+            // switch to 1-player mode
             function setOnePlayerMode() {
                 gameMode = 'onePlayer';
                 onePlayerBtn.classList.add('active');
@@ -423,7 +423,7 @@
                 initGame();
             }
             
-            // Switch to 2-player mode
+            // switch to 2-player mode
             function setTwoPlayerMode() {
                 gameMode = 'twoPlayer';
                 twoPlayerBtn.classList.add('active');
@@ -432,13 +432,13 @@
                 initGame();
             }
             
-            // Event listeners
+            // svent listeners
             cells.forEach(cell => cell.addEventListener('click', handleCellClick));
             restartBtn.addEventListener('click', initGame);
             onePlayerBtn.addEventListener('click', setOnePlayerMode);
             twoPlayerBtn.addEventListener('click', setTwoPlayerMode);
             
-            // Initialize the game
+            // initialize the game
             setTwoPlayerMode();
         });
     </script>

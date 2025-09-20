@@ -13,8 +13,7 @@
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
-		return new Response(`
-		
-		);
+		//return new Response('Hello Amber');
+		return env.ASSETS.fetch(request);
 	},
 } satisfies ExportedHandler<Env>;
