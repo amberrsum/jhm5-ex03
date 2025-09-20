@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-do List</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #FFFBDE, #FDF5AA);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-width: 600px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .header {
+            background-color: #4682A9;
+            color: white;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header h1 {
+            font-weight: 300;
+            font-size: 2.2rem;
+            letter-spacing: 1px;
+        }
+        
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 2px;
+        }
+        
+        .input-container {
+            display: flex;
+            padding: 25px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        #task-input {
+            flex: 1;
+            padding: 14px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 30px 0 0 30px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        #task-input:focus {
+            border-color: #4682A9;
+        }
+        
+        #add-btn {
+            background-color: #4682A9;
+            color: white;
+            border: none;
+            padding: 0 30px;
+            border-radius: 0 30px 30px 0;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        #add-btn:hover {
+            background-color: #4682A9;
+        }
+        
+        .tasks-container {
+            padding: 10px 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 16px 25px;
+            border-bottom: 1px solid #f5f5f5;
+            animation: fadeIn 0.4s;
+            transition: background-color 0.2s;
+        }
+        
+        .task-item:hover {
+            background-color: #fafafa;
+        }
+        
+        .status-container {
+            position: relative;
+            width: 100px;
+            margin-right: 15px;
+        }
+        
+        .status-btn {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 20px;
+            border: none;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .status-btn i {
+            margin-right: 6px;
+        }
+        
+        .status-not-started {
+            background-color: #e0e0e0;
+            color: #666;
+        }
+        
+        .status-processing {
+            background-color: #ffecb3;
+            color: #ff9800;
+        }
+        
+        .status-completed {
+            background-color: #91C8E4;
+            color: #4682A9;
+        }
+        
+        .status-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 10;
+            margin-top: 5px;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .status-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+        
+        .status-option:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .status-option i {
+            margin-right: 8px;
+            width: 16px;
+            text-align: center;
+        }
+        
+        .task-text {
+            flex: 1;
+            font-size: 1.1rem;
+            color: #333;
+            transition: all 0.3s;
+            padding: 0 10px;
+        }
+        
+        .task-text.completed {
+            text-decoration: line-through;
+            color: #a0a0a0;
+        }
+        
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #e57373;
+            font-size: 1.2rem;
+            cursor: pointer;
+            opacity: 0.7;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .delete-btn:hover {
+            opacity: 1;
+            background-color: rgba(229, 115, 115, 0.1);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #a0a0a0;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.2;
+        }
+        
+        .empty-state p {
+            font-size: 1.2rem;
+            margin-top: 10px;
+        }
+        
+        .stats-container {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        
+        .stat-box {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 0 5px;
+            background: white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+        
+        .stat-title {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+        
+        .stat-not-started .stat-value {
+            color: #757575;
+        }
+        
+        .stat-processing .stat-value {
+            color: #ff9800;
+        }
+        
+        .stat-completed .stat-value {
+            color: #4682A9;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @media (max-width: 600px) {
+            .header {
+                padding: 20px 15px;
+            }
+            
+            .input-container {
+                padding: 20px 15px;
+            }
+            
+            .task-item {
+                padding: 15px;
+                flex-wrap: wrap;
+            }
+            
+            .status-container {
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+            
+            .task-text {
+                width: 100%;
+                padding: 10px 0;
+            }
+            
+            .delete-btn {
+                position: absolute;
+                right: 15px;
+            }
+            
+            .stats-container {
+                flex-direction: column;
+            }
+            
+            .stat-box {
+                margin: 5px 0;
+            }
+        }
+        
+        .instructions {
+            padding: 20px;
+            background-color: #f5f9f5;
+            border-top: 1px solid #FFFBDE;
+            font-size: 0.9rem;
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .instructions h3 {
+            margin-bottom: 10px;
+            color: #4682A9;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        .status-examples {
+            display: flex;
+            margin-top: 15px;
+            justify-content: space-around;
+        }
+        
+        .status-example {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+        
+        .status-example-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .example-not-started {
+            background-color: #e0e0e0;
+        }
+        
+        .example-processing {
+            background-color: #ffecb3;
+        }
+        
+        .example-completed {
+            background-color: #c8e6c9;
+        }
+
+        /* add new loading icon */
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4682A9;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+            display: none;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="loading-overlay" id="loading-overlay">
+            <div class="loader"></div>
+        </div>
+        
+        <div class="header">
+            <h1><i class="fas fa-list-check"></i> To-do List</h1>
+        </div>
+        
+        <div class="input-container">
+            <input type="text" id="task-input" placeholder="Add New Mission...">
+            <button id="add-btn">Add</button>
+        </div>
+        
+        <div class="tasks-container" id="tasks-list">
+            <!-- mission status -->
+        </div>
+        
+        <div class="stats-container">
+            <div class="stat-box stat-not-started">
+                <div class="stat-title">Not Started.</div>
+                <div class="stat-value" id="not-started-count">0</div>
+            </div>
+            <div class="stat-box stat-processing">
+                <div class="stat-title">Processsing</div>
+                <div class="stat-value" id="processing-count">0</div>
+            </div>
+            <div class="stat-box stat-completed">
+                <div class="stat-title">Completed</div>
+                <div class="stat-value" id="completed-count">0</div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>How to use.</h3>
+            <ul>
+                <li>Input your mission in textbox, click "Add" button or click "Enter" to add new mission.</li>
+                <li>Click mission state button to change mission state:<strong>Not Started.</strong> → <strong>Processing</strong> → <strong>Completed</strong></li>
+                <li>Click <i class="fas fa-times"></i> to delete</li>
+                <li>All mission will auto-save in the Cloudflare KV, it will still here when you open next time.</li>
+            </ul>
+            
+            <div class="status-examples">
+                <div class="status-example">
+                    <div class="status-example-dot example-not-started"></div>
+                    <span>Not Started</span>
+                </div>
+                <div class="status-example">
+                    <div class="status-example-dot example-processing"></div>
+                    <span>Processing</span>
+                </div>
+                <div class="status-example">
+                    <div class="status-example-dot example-completed"></div>
+                    <span>Completed</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Cloudflare KV 
+        const CF_KV_BASE_URL = 'https://jhm5-ex03.ambersum923.workers.dev'; 
+        const USER_ID = 'default-user'; 
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const taskInput = document.getElementById('task-input');
+            const addBtn = document.getElementById('add-btn');
+            const tasksList = document.getElementById('tasks-list');
+            const notStartedCount = document.getElementById('not-started-count');
+            const processingCount = document.getElementById('processing-count');
+            const completedCount = document.getElementById('completed-count');
+            const loadingOverlay = document.getElementById('loading-overlay');
+            
+            let tasks = [];
+            
+            // start
+            initApp();
+            
+            // add task 
+            addBtn.addEventListener('click', addTask);
+            taskInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addTask();
+            });
+            
+            async function initApp() {
+                showLoading();
+                try {
+                    await loadTasks();
+                    renderTasks();
+                    updateStats();
+                } catch (error) {
+                    console.error('Failed to load tasks:', error);
+                    alert('Failed to load tasks. Please check your connection.');
+                } finally {
+                    hideLoading();
+                }
+            }
+            
+            async function addTask() {
+                const text = taskInput.value.trim();
+                if (text) {
+                    showLoading();
+                    try {
+                        const newTask = {
+                            id: Date.now(),
+                            text,
+                            status: 'not-started' // defult
+                        };
+                        
+                        tasks.unshift(newTask);
+                        await saveTasks();
+                        renderTasks();
+                        updateStats();
+                        taskInput.value = '';
+                        taskInput.focus();
+                    } catch (error) {
+                        console.error('Failed to add task:', error);
+                        alert('Failed to add task. Please try again.');
+                    } finally {
+                        hideLoading();
+                    }
+                }
+            }
+            
+            // load task 
+            async function loadTasks() {
+                try {
+                    const response = await fetch(`${CF_KV_BASE_URL}/tasks?user=${USER_ID}`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    tasks = data.tasks || [];
+                } catch (error) {
+                    console.error('Error loading tasks from KV:', error);
+                    // if cannot load from kv
+                    tasks = [];
+                }
+            }
+            
+            // save task to clouddlare kv
+            async function saveTasks() {
+                try {
+                    const response = await fetch(`${CF_KV_BASE_URL}/tasks`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            user: USER_ID,
+                            tasks: tasks
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    console.log('Tasks saved to KV successfully');
+                } catch (error) {
+                    console.error('Error saving tasks to KV:', error);
+                    throw error; 
+                }
+            }
+            
+            // task list
+            function renderTasks() {
+                if (tasks.length === 0) {
+                    tasksList.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-clipboard-list"></i>
+                            <p>There is no any mission now.</p>
+                            <p>Add a new mission to get started!</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                tasksList.innerHTML = '';
+                tasks.forEach(task => {
+                    const taskElement = document.createElement('div');
+                    taskElement.className = 'task-item';
+                    
+                    // change status icon according the status
+                    let statusIcon, statusText;
+                    switch(task.status) {
+                        case 'processing':
+                            statusIcon = 'fas fa-sync-alt';
+                            statusText = 'Processing';
+                            break;
+                        case 'completed':
+                            statusIcon = 'fas fa-check-circle';
+                            statusText = 'Completed';
+                            break;
+                        default:
+                            statusIcon = 'far fa-circle';
+                            statusText = 'Not started';
+                    }
+                    
+                    taskElement.innerHTML = `
+                        <div class="status-container">
+                            <button class="status-btn status-${task.status}" data-id="${task.id}">
+                                <i class="${statusIcon}"></i>${statusText}
+                            </button>
+                            <div class="status-options">
+                                <div class="status-option" data-status="not-started">
+                                    <i class="far fa-circle"></i>Not started
+                                </div>
+                                <div class="status-option" data-status="processing">
+                                    <i class="fas fa-sync-alt"></i>Processing
+                                </div>
+                                <div class="status-option" data-status="completed">
+                                    <i class="fas fa-check-circle"></i>Completed
+                                </div>
+                            </div>
+                        </div>
+                        <div class="task-text ${task.status === 'completed' ? 'completed' : ''}">${task.text}</div>
+                        <button class="delete-btn" data-id="${task.id}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                    tasksList.appendChild(taskElement);
+                });
+                
+                // add task status listener
+                document.querySelectorAll('.status-btn').forEach(button => {
+                    button.addEventListener('click', toggleStatusMenu);
+                });
+                
+                document.querySelectorAll('.status-option').forEach(option => {
+                    option.addEventListener('click', changeStatus);
+                });
+                
+                document.querySelectorAll('.delete-btn').forEach(button => {
+                    button.addEventListener('click', deleteTask);
+                });
+            }
+            
+            // change status menu
+            function toggleStatusMenu(e) {
+                // close all other opended status menu
+                document.querySelectorAll('.status-options').forEach(menu => {
+                    menu.style.display = 'none';
+                });
+                
+                // open current status menu
+                const optionsMenu = e.target.closest('.status-container').querySelector('.status-options');
+                optionsMenu.style.display = optionsMenu.style.display === 'block' ? 'none' : 'block';
+                
+                // click other place to close all menus
+                setTimeout(() => {
+                    document.addEventListener('click', closeAllMenus);
+                }, 10);
+            }
+            
+            // close all menus
+            function closeAllMenus(e) {
+                if (!e.target.closest('.status-options') && !e.target.closest('.status-btn')) {
+                    document.querySelectorAll('.status-options').forEach(menu => {
+                        menu.style.display = 'none';
+                    });
+                    document.removeEventListener('click', closeAllMenus);
+                }
+            }
+            
+            // change status
+            async function changeStatus(e) {
+                const status = e.target.closest('.status-option').dataset.status;
+                const taskId = parseInt(e.target.closest('.status-container').querySelector('.status-btn').dataset.id);
+                
+                const taskIndex = tasks.findIndex(task => task.id === taskId);
+                if (taskIndex !== -1) {
+                    showLoading();
+                    try {
+                        tasks[taskIndex].status = status;
+                        await saveTasks();
+                        renderTasks();
+                        updateStats();
+                    } catch (error) {
+                        console.error('Failed to update task status:', error);
+                        alert('Failed to update task status. Please try again.');
+                    } finally {
+                        hideLoading();
+                    }
+                }
+            }
+            
+            // delete task
+            async function deleteTask(e) {
+                const taskId = parseInt(e.target.closest('.delete-btn').dataset.id);
+                
+                showLoading();
+                try {
+                    tasks = tasks.filter(task => task.id !== taskId);
+                    await saveTasks();
+                    renderTasks();
+                    updateStats();
+                } catch (error) {
+                    console.error('Failed to delete task:', error);
+                    alert('Failed to delete task. Please try again.');
+                } finally {
+                    hideLoading();
+                }
+            }
+            
+            // update data
+            function updateStats() {
+                const notStartedTasks = tasks.filter(task => task.status === 'not-started').length;
+                const processingTasks = tasks.filter(task => task.status === 'processing').length;
+                const completedTasks = tasks.filter(task => task.status === 'completed').length;
+                
+                notStartedCount.textContent = notStartedTasks;
+                processingCount.textContent = processingTasks;
+                completedCount.textContent = completedTasks;
+            }
+            
+            // show loading
+            function showLoading() {
+                loadingOverlay.style.display = 'flex';
+            }
+            
+            // hide loading
+            function hideLoading() {
+                loadingOverlay.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
