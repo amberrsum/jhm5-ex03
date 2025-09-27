@@ -29,4 +29,10 @@ save
 open git log
 set user name and user gmail
 
+ex1 tictactoe: https://jhm5-ex03.ambersum923.workers.dev/ex1.html
+ex02 todoapp: https://jhm5-ex03.ambersum923.workers.dev/ex02_todoapp.html
+Ex4 todoapp2: https://jhm5-ex03.ambersum923.workers.dev/ex4_todoapp2.html
 
+based on todo.html and make a new todo2.html, instead of using localstorage, use cloudflare KV.
+
+ex05 DSE analysis on cloudflare: DS 

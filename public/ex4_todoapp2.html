@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-do List</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: linear-gradient(135deg, #FFFBDE, #FDF5AA); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .container { background: white; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); max-width: 600px; width: 100%; }
+        .header { background: #4682A9; color: white; padding: 25px; text-align: center; }
+        .header h1 { font-weight: 300; font-size: 2.2rem; }
+        .input-container { display: flex; padding: 25px; border-bottom: 1px solid #f0f0f0; }
+        #task-input { flex: 1; padding: 14px 20px; border: 2px solid #e0e0e0; border-radius: 30px 0 0 30px; font-size: 1rem; outline: none; }
+        #task-input:focus { border-color: #4682A9; }
+        #add-btn { background: #4682A9; color: white; border: none; padding: 0 30px; border-radius: 0 30px 30px 0; cursor: pointer; transition: background 0.3s; }
+        #add-btn:hover { background: #3a6d8a; }
+        .tasks-container { padding: 10px 0; max-height: 400px; overflow-y: auto; }
+        .task-item { display: flex; align-items: center; padding: 16px 25px; border-bottom: 1px solid #f5f5f5; animation: fadeIn 0.4s; }
+        .status-container { position: relative; width: 100px; margin-right: 15px; }
+        .status-btn { width: 100%; padding: 8px 12px; border-radius: 20px; border: none; cursor: pointer; display: flex; align-items: center; transition: all 0.3s; }
+        .status-not-started { background: #e0e0e0; color: #666; }
+        .status-processing { background: #ffecb3; color: #ff9800; }
+        .status-completed { background: #91C8E4; color: #4682A9; }
+        .status-options { position: absolute; top: 100%; left: 0; width: 100%; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: none; z-index: 10; margin-top: 5px; }
+        .status-option { padding: 8px 12px; cursor: pointer; display: flex; align-items: center; }
+        .task-text { flex: 1; font-size: 1.1rem; padding: 0 10px; }
+        .task-text.completed { text-decoration: line-through; color: #a0a0a0; }
+        .delete-btn { background: none; border: none; color: #e57373; cursor: pointer; opacity: 0.7; transition: all 0.3s; }
+        .delete-btn:hover { opacity: 1; }
+        .empty-state { text-align: center; padding: 50px 20px; color: #a0a0a0; }
+        .stats-container { display: flex; justify-content: space-between; padding: 20px; background: #f9f9f9; }
+        .stat-box { flex: 1; text-align: center; padding: 15px; background: white; border-radius: 8px; margin: 0 5px; }
+        .stat-value { font-size: 1.8rem; font-weight: bold; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 600px) {
+            .task-item { flex-wrap: wrap; padding: 15px; }
+            .status-container { width: 100%; margin: 0 0 10px 0; }
+            .stats-container { flex-direction: column; }
+            .stat-box { margin: 5px 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header"><h1><i class="fas fa-list-check"></i> To-do List</h1></div>
+        <div class="input-container">
+            <input type="text" id="task-input" placeholder="Add New Mission...">
+            <button id="add-btn">Add</button>
+        </div>
+        <div class="tasks-container" id="tasks-list"></div>
+        <div class="stats-container">
+            <div class="stat-box"><div class="stat-title">Not Started</div><div class="stat-value" id="not-started-count">0</div></div>
+            <div class="stat-box"><div class="stat-title">Processing</div><div class="stat-value" id="processing-count">0</div></div>
+            <div class="stat-box"><div class="stat-title">Completed</div><div class="stat-value" id="completed-count">0</div></div>
+        </div>
+    </div>
+
+    <script>
+        const CF_KV_BASE_URL = 'https://jhm5-ex03.ambersum923.workers.dev';
+        const USER_ID = 'default-user';
+        let tasks = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const taskInput = document.getElementById('task-input');
+            const addBtn = document.getElementById('add-btn');
+            const tasksList = document.getElementById('tasks-list');
+            
+            initApp();
+            
+            addBtn.addEventListener('click', addTask);
+            taskInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTask(); });
+            tasksList.addEventListener('click', handleTaskActions);
+            
+            async function initApp() {
+                await loadTasks();
+                renderTasks();
+                updateStats();
+            }
+            
+            async function addTask() {
+                const text = taskInput.value.trim();
+                if (text) {
+                    tasks.unshift({ id: Date.now(), text, status: 'not-started' });
+                    await saveTasks();
+                    renderTasks();
+                    updateStats();
+                    taskInput.value = '';
+                }
+            }
+            
+            function handleTaskActions(e) {
+                if (e.target.closest('.status-btn')) toggleStatusMenu(e);
+                if (e.target.closest('.status-option')) changeStatus(e);
+                if (e.target.closest('.delete-btn')) deleteTask(e);
+            }
+            
+            async function loadTasks() {
+                try {
+                    const response = await fetch(`${CF_KV_BASE_URL}/tasks?user=${USER_ID}`);
+                    const data = await response.json();
+                    tasks = data.tasks || [];
+                } catch {
+                    const localTasks = localStorage.getItem(`tasks-${USER_ID}`);
+                    tasks = localTasks ? JSON.parse(localTasks) : [];
+                }
+            }
+            
+            async function saveTasks() {
+                try {
+                    await fetch(`${CF_KV_BASE_URL}/tasks`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user: USER_ID, tasks })
+                    });
+                    localStorage.setItem(`tasks-${USER_ID}`, JSON.stringify(tasks));
+                } catch {
+                    localStorage.setItem(`tasks-${USER_ID}`, JSON.stringify(tasks));
+                }
+            }
+            
+            function renderTasks() {
+                if (tasks.length === 0) {
+                    tasksList.innerHTML = `<div class="empty-state"><i class="fas fa-clipboard-list"></i><p>No missions</p></div>`;
+                    return;
+                }
+                
+                tasksList.innerHTML = '';
+                tasks.forEach(task => {
+                    let statusIcon, statusText;
+                    switch(task.status) {
+                        case 'processing': statusIcon = 'fas fa-sync-alt'; statusText = 'Processing'; break;
+                        case 'completed': statusIcon = 'fas fa-check-circle'; statusText = 'Completed'; break;
+                        default: statusIcon = 'far fa-circle'; statusText = 'Not started';
+                    }
+                    
+                    const taskElement = document.createElement('div');
+                    taskElement.className = 'task-item';
+                    taskElement.innerHTML = `
+                        <div class="status-container">
+                            <button class="status-btn status-${task.status}" data-id="${task.id}">
+                                <i class="${statusIcon}"></i>${statusText}
+                            </button>
+                            <div class="status-options">
+                                <div class="status-option" data-status="not-started"><i class="far fa-circle"></i>Not started</div>
+                                <div class="status-option" data-status="processing"><i class="fas fa-sync-alt"></i>Processing</div>
+                                <div class="status-option" data-status="completed"><i class="fas fa-check-circle"></i>Completed</div>
+                            </div>
+                        </div>
+                        <div class="task-text ${task.status === 'completed' ? 'completed' : ''}">${task.text}</div>
+                        <button class="delete-btn" data-id="${task.id}"><i class="fas fa-times"></i></button>
+                    `;
+                    tasksList.appendChild(taskElement);
+                });
+            }
+            
+            function toggleStatusMenu(e) {
+                document.querySelectorAll('.status-options').forEach(menu => menu.style.display = 'none');
+                const optionsMenu = e.target.closest('.status-container').querySelector('.status-options');
+                optionsMenu.style.display = optionsMenu.style.display === 'block' ? 'none' : 'block';
+                setTimeout(() => { document.addEventListener('click', closeAllMenus); }, 10);
+            }
+            
+            function closeAllMenus(e) {
+                if (!e.target.closest('.status-options') && !e.target.closest('.status-btn')) {
+                    document.querySelectorAll('.status-options').forEach(menu => menu.style.display = 'none');
+                    document.removeEventListener('click', closeAllMenus);
+                }
+            }
+            
+            async function changeStatus(e) {
+                const status = e.target.closest('.status-option').dataset.status;
+                const taskId = parseInt(e.target.closest('.status-container').querySelector('.status-btn').dataset.id);
+                const taskIndex = tasks.findIndex(task => task.id === taskId);
+                if (taskIndex !== -1) {
+                    tasks[taskIndex].status = status;
+                    await saveTasks();
+                    renderTasks();
+                    updateStats();
+                }
+            }
+            
+            async function deleteTask(e) {
+                const taskId = parseInt(e.target.closest('.delete-btn').dataset.id);
+                tasks = tasks.filter(task => task.id !== taskId);
+                await saveTasks();
+                renderTasks();
+                updateStats();
+            }
+            
+            function updateStats() {
+                document.getElementById('not-started-count').textContent = tasks.filter(t => t.status === 'not-started').length;
+                document.getElementById('processing-count').textContent = tasks.filter(t => t.status === 'processing').length;
+                document.getElementById('completed-count').textContent = tasks.filter(t => t.status === 'completed').length;
+            }
+        });
+    </script>
+</body>
+</html>
